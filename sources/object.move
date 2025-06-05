@@ -1,10 +1,7 @@
 module sizekit::object;
 
 use std::address;
-use std::vector;
 use sui::bcs;
-use sui::object::{Self, UID};
-use sui::tx_context::TxContext;
 
 const ERR_TARGET_SIZE_TOO_SMALL: u64 = 1;
 const ERR_CANNOT_MATCH_TARGET_SIZE: u64 = 2;
@@ -41,4 +38,68 @@ public fun new_with_target_size(target_size: u64, ctx: &mut TxContext): S {
     };
     assert!(current_bcs_size == target_size, ERR_CANNOT_MATCH_TARGET_SIZE);
     s
+}
+
+public fun delete(s: S) {
+    let S { id, contents: _ } = s;
+    id.delete();
+}
+
+#[test_only]
+use sui::test_scenario;
+
+#[test]
+fun verify_minimum_size() {
+    let mut scenario = test_scenario::begin(@0x1);
+    let min_size = address::length() + 1;
+    let s = new_with_target_size(min_size, scenario.ctx());
+    let actual_size = bcs::to_bytes(&s).length();
+    assert!(actual_size == min_size);
+    delete(s);
+    scenario.end();
+}
+
+#[test]
+fun verify_exact_size_matching() {
+    let mut scenario = test_scenario::begin(@0x1);
+    let target_sizes = vector[33, 50, 100, 127, 128, 129, 255, 256, 1000];
+    let mut i = 0;
+    while (i < vector::length(&target_sizes)) {
+        let target_size = target_sizes[i];
+        let s = new_with_target_size(target_size, scenario.ctx());
+        let actual_size = bcs::to_bytes(&s).length();
+        assert!(actual_size == target_size);
+        delete(s);
+        i = i + 1;
+    };
+    scenario.end();
+}
+
+#[test]
+#[expected_failure(abort_code = ERR_TARGET_SIZE_TOO_SMALL)]
+fun verify_size_too_small_failure() {
+    let mut scenario = test_scenario::begin(@0x1);
+    let min_size = address::length() + 1;
+    let s = new_with_target_size(min_size - 1, scenario.ctx());
+    delete(s);
+    scenario.end();
+}
+
+#[test]
+fun verify_uleb128_boundary_handling() {
+    let mut scenario = test_scenario::begin(@0x1);
+    // Test around ULEB128 encoding boundaries for vector length
+    let boundary_sizes = vector[127, 128, 129, 255, 256, 257];
+    let mut i = 0;
+    while (i < vector::length(&boundary_sizes)) {
+        let target_size = boundary_sizes[i];
+        if (target_size >= address::length() + 1) {
+            let s = new_with_target_size(target_size, scenario.ctx());
+            let actual_size = bcs::to_bytes(&s).length();
+            assert!(actual_size == target_size);
+            delete(s);
+        };
+        i = i + 1;
+    };
+    scenario.end();
 }
