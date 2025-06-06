@@ -51,7 +51,6 @@ public fun new_with_size(target_size: u64, ctx: &mut TxContext): S {
         let _ = vector::pop_back(&mut s.contents);
         size = size - 1;
     };
-
     s
 }
 
