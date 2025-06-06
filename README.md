@@ -1,6 +1,7 @@
 # Sizekit
 
-A Sui Move library for creating objects with precise BCS-serialized sizes. Sizekit provides byte-level precision for object creation, size measurement, and unit conversion utilities.
+A Sui Move library for creating objects with precise BCS-serialized sizes. 
+Sizekit provides byte-level precision for object creation, size measurement, and unit conversion utilities.
 
 ## Features
 
@@ -8,7 +9,6 @@ A Sui Move library for creating objects with precise BCS-serialized sizes. Sizek
 - **ULEB128 Safety**: Automatic detection and avoidance of problematic encoding boundaries
 - **Unit Conversion**: Easy conversion between bytes, KB, and MB with formatting
 - **Size Utilities**: Measurement, comparison, and pattern generation tools
-- **Move 2024 Compatible**: Built with the latest Move 2024 beta edition
 
 ## Modules
 
@@ -20,13 +20,6 @@ use sizekit::object;
 
 // Create object with exact size
 let obj = object::new_with_size(256, ctx);
-
-// Check for unsafe sizes before creation
-if (!object::is_uleb128_boundary(target_size)) {
-    let safe_obj = object::new_with_size(target_size, ctx);
-    // ... use object
-    object::delete(safe_obj);
-}
 
 // Clean up
 object::delete(obj);
