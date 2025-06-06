@@ -1,5 +1,5 @@
-/// Basic usage examples for sizekit library
-module sizekit::basic;
+/// Usage examples for sizekit library
+module sizekit::example;
 
 use sizekit::object::{Self, S};
 use sizekit::unit;
